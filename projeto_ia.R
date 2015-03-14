@@ -1,3 +1,17 @@
+#Legenda dos dados
+
+#1.Sample code number            id number
+#2. Clump Thickness               1 - 10
+#3. Uniformity of Cell Size       1 - 10
+#4. Uniformity of Cell Shape      1 - 10
+#5. Marginal Adhesion             1 - 10
+#6. Single Epithelial Cell Size   1 - 10
+#7. Bare Nuclei                   1 - 10
+#8. Bland Chromatin               1 - 10
+#9. Normal Nucleoli               1 - 10
+#10. Mitoses                      1 - 10
+#11. Class:                       2(benígno) ou 4(maligno)
+
 library(ggplot2)
 library("gmodels")
 library("C50")
@@ -6,84 +20,83 @@ library(rattle)
 library(rpart.plot)
 library(RColorBrewer)
 
-breast_cancer_wisconsin = read.csv("C:/Users/Leticia/Documents/IA/projeto/breast-cancer-wisconsin_2.csv", head= F)
-colnames(breast_cancer_wisconsin) = c ("sample_code","thickness", "uniformity_size",
+setwd("C:/Users/Thiago/Documents/UFCG/Projeto - IA")
+data <- read.csv("data/breast-cancer-wisconsin_2.csv",sep=",")
+data <- na.omit(data)
+colnames(data) = c ("sample_code","thickness", "uniformity_size",
                                        "uniformity_shape", "marginal_adhesion",
                                        "single_epithelial_size", "bare_nuclei",
                                        "bland_chromatin", "normal_nucleoli", "mitoses",
                                        "class")
-breast_cancer_wisconsin$class = factor(breast_cancer_wisconsin$class)
 
-#########################
-# Embaralhando os dados #
-#########################
+View(data)
+plot(data$thickness)
+plot(data$uniformity_size)
+plot(data$uniformity_shap)
+plot(data$marginal_adhesion)
+plot(data$single_epithelial_size)
+plot(data$bare_nuclei)
+plot(data$bland_chromatin)
+plot(data$normal_nucleoli)
+plot(data$mitoses)
 
-set.seed(12345)
-breast_cancer_wisconsin_rand = breast_cancer_wisconsin[order(runif(699)),]
+plot(sort(data$thickness))
+plot(sort(data$uniformity_size))
+plot(sort(data$uniformity_shape))
+plot(sort(data$marginal_adhesion))
+plot(sort(data$single_epithelial_size))
+plot(data$bare_nuclei)
+plot(sort(data$bland_chromatin))
+plot(sort(data$normal_nucleoli))
+plot(sort(data$mitoses))
 
-##################################
-# Criando partições Treino/Teste #
-##################################
+cor(data$class,data$uniformity_size)
+cor(data$class,data$uniformity_shape)
+cor(data$class,data$marginal_adhesion)
+cor(data$class,data$single_epithelial_size)
+cor(data$class,data$bland_chromatin)
+cor(data$class,data$normal_nucleoli)
+cor(data$class,data$mitoses)
+cor(data$class,data$thickness)
 
-breast_cancer_wisconsin_train = breast_cancer_wisconsin_rand[1:629,]
-breast_cancer_wisconsin_test = breast_cancer_wisconsin_rand[630:699,]
-prop.table(table(breast_cancer_wisconsin_train$class))
-prop.table(table(breast_cancer_wisconsin_test$class))
+fit <- rpart(class ~ bland_chromatin + uniformity_shape + uniformity_size, data=data, method="class")
+fancyRpartPlot(fit)
+prediction <- predict(fit, data, type = "class")
 
-######################
-# Treinando a árvore #
-######################
-
-breast_cancer_wisconsin_model = C5.0(breast_cancer_wisconsin_train[-11], breast_cancer_wisconsin_train$class)
-breast_cancer_wisconsin_model
-summary(breast_cancer_wisconsin_model)
-
-################################
-# Aplicando nos dados de teste #
-################################
-
-breast_cancer_wisconsin_pred = predict(breast_cancer_wisconsin_model, breast_cancer_wisconsin_test)
-CrossTable(breast_cancer_wisconsin_test$class, breast_cancer_wisconsin_pred, prop.chisq = FALSE, prop.c = FALSE,
-           prop.r = FALSE, dnn = c('actual class', 'predicted class'))
-
-########################################
-# Treinando com floresta de 10 árvores #
-########################################
-
-breast_cancer_wisconsin_model_boost10 = C5.0(breast_cancer_wisconsin_train[-11], breast_cancer_wisconsin_train$class,
-                                             trials = 10)
-breast_cancer_wisconsin_model_boost10
-summary(breast_cancer_wisconsin_model_boost10)
-
-breast_cancer_wisconsin_boost10_pred = predict(breast_cancer_wisconsin_model_boost10, breast_cancer_wisconsin_test)
-CrossTable(breast_cancer_wisconsin_test$class, breast_cancer_wisconsin_boost10_pred, prop.chisq = FALSE,
-           prop.c = FALSE, prop.r = FALSE, dnn = c('actual class', 'predicted class'))
-
-########################
-# Usando custo de erro #
-########################
-
-error_cost = matrix(c(0, 1, 4, 0), nrow = 2)
-breast_cancer_wisconsin_cost <- C5.0(breast_cancer_wisconsin_train[-11], breast_cancer_wisconsin_train$class,
-                                     costs = error_cost)
-breast_cancer_wisconsin_cost_pred <- predict(breast_cancer_wisconsin_cost, breast_cancer_wisconsin_test)
-CrossTable(breast_cancer_wisconsin_test$class, breast_cancer_wisconsin_cost_pred, prop.chisq = FALSE, prop.c = FALSE,
+CrossTable(data$class, prediction, prop.chisq = FALSE, prop.c = FALSE,
            prop.r = FALSE, dnn = c('actual class', 'predicted class'))
 
 
-wdbc = read.csv("C:/Users/Leticia/Documents/IA/projeto/wdbc_2.csv", head= F)
-colnames(wdbc) = c("ID","diagnosis", "radious", "texture", "perimeter", "area",
-                   "smoothness", "compactness", "concavity", "concave_points", "symmetry",
-                   "fractal_dimension","feature1","feature2","feature3","feature4","feature5",
-                   "feature6","feature7","feature8","feature9","feature10","feature11",
-                   "feature12","feature13","feature14","feature15", "feature16","feature17",
-                   "feature18","feature19","feature20")
+fit2 <- rpart(class ~ marginal_adhesion +
+               bland_chromatin + 
+               uniformity_shape + 
+               uniformity_size +
+               single_epithelial_size+
+               bland_chromatin +
+               normal_nucleoli +
+               mitoses +
+               thickness
+             , data=data, method="class")
 
-wpbc = read.csv("C:/Users/Leticia/Documents/IA/projeto/wpbc_2.csv", head= F)
-colnames(wpbc) = c("ID","outcome","time", "radious", "texture", "perimeter", "area",
-                   "smoothness", "compactness", "concavity", "concave_points", "symmetry",
-                   "fractal_dimension","feature1","feature2","feature3","feature4","feature5",
-                   "feature6","feature7","feature8","feature9","feature10","feature11",
-                   "feature12","feature13","feature14","feature15", "feature16","feature17",
-                   "feature18","feature19","feature20","feature21","feature22")
+fancyRpartPlot(fit2)
 
+prediction2 <- predict(fit2, data, type = "class")
+
+CrossTable(data$class, prediction2, prop.chisq = FALSE, prop.c = FALSE,
+           prop.r = FALSE, dnn = c('actual class', 'predicted class'))
+
+fit3 = randomForest(factor(class) ~ marginal_adhesion +
+          bland_chromatin + 
+          uniformity_shape + 
+          uniformity_size +
+          single_epithelial_size+
+          bland_chromatin +
+          normal_nucleoli +
+          mitoses +
+          thickness
+        , data=data, method="class", ntree = 10)
+
+prediction3 <- predict(fit3, data, type = "class")
+
+CrossTable(data$class, prediction3, prop.chisq = FALSE, prop.c = FALSE,
+           prop.r = FALSE, dnn = c('actual class', 'predicted class'))
