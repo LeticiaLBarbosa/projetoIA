@@ -1,0 +1,126 @@
+---
+title: "PrevisÃ£o de cancer de mama"
+author: "Thiago Almeida, Maria Leticia, Irvile Rodrigues, Arthur Holanda"
+date: "sexta, MarÃ§o 06, 2015"
+output: ioslides_presentation
+---
+
+```{r,echo=FALSE,warning=FALSE}
+library("gmodels")
+library("C50")
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+library("rpart")
+library(ggplot2)
+
+setwd("C:/Users/Thiago/Documents/UFCG/Projeto - IA")
+data <- read.csv("data/breast-cancer-wisconsin_2.csv",sep=",")
+data <- na.omit(data)
+colnames(data) = c ("sample_code","thickness", "uniformity_size",
+                                       "uniformity_shape", "marginal_adhesion",
+                                       "single_epithelial_size", "bare_nuclei",
+                                       "bland_chromatin", "normal_nucleoli", "mitoses",
+                                       "class")
+
+cor1 <- cor(data$class,data$uniformity_size)
+cor2 <- cor(data$class,data$uniformity_shape)
+cor3 <- cor(data$class,data$marginal_adhesion)
+cor4 <- cor(data$class,data$single_epithelial_size)
+cor5 <- cor(data$class,data$bland_chromatin)
+cor6 <- cor(data$class,data$normal_nucleoli)
+cor7 <- cor(data$class,data$mitoses)
+cor8 <- cor(data$class,data$thickness)
+
+
+smoke <- matrix(c(cor1,cor2,cor3,cor4,cor5,cor6,cor7,cor8),ncol=8,byrow=TRUE)
+colnames(smoke) <- c("uniformity size",
+                  "uniformity shape",
+                  "marginal adhesion",
+                  "single epithelial size",
+                  "bland chromatin","normal nucleoli","mitoses","thickness")
+rownames(smoke) <- c("class")
+fit <- rpart(class ~ bland_chromatin + uniformity_shape + uniformity_size, data=data, method="class")
+prediction <- predict(fit, data, type = "class")
+
+fit2 <- rpart(class ~ marginal_adhesion +
+               bland_chromatin + 
+               uniformity_shape + 
+               uniformity_size +
+               single_epithelial_size+
+               bland_chromatin +
+               normal_nucleoli +
+               mitoses +
+               thickness
+             , data=data, method="class")
+
+
+prediction2 <- predict(fit2, data, type = "class")
+```
+
+## Definicao do Problema
+Demora e dificil acesso das pessoas ao diagnostico do cancer. 
+
+## Global Neural Network Cloud Service
+<img src="global.png" width="800px" />
+
+## Natureza dos dados
+- Sample code number -> range
+- Clump Thickness -> 1 - 10
+- Uniformity of Cell Size -> 1 - 10
+- Uniformity of Cell Shape 1 - 10
+- Marginal Adhesion 1 - 10
+- Single Epithelial Cell Size 1 - 10
+- Bare Nuclei 1 - 10
+- Bland Chromatin 1 - 10
+- Normal Nucleoli 1 - 10
+- Mitoses 1 - 10
+- Class: 2(benigno) - 4(Maligno)   
+
+
+## Analise previa
+```{r,echo=FALSE,warning=FALSE}
+plot(data)
+```
+
+## Correlacao do dados
+```{r,echo=FALSE,warning=FALSE}
+smoke
+```
+
+## Arvore de decisao com Rpart
+```{r,echo=FALSE,warning=FALSE}
+fancyRpartPlot(fit)
+```
+
+## Resultado da arvore
+<img src="crosstable1.png" width="600px" />
+
+## Melhoramento do modelo com Rpart
+
+```{r ,echo=FALSE,warning=FALSE}
+fancyRpartPlot(fit2)
+```
+
+## Resultado final da arvore
+<img src="crosstable2.png" width="600px" />
+
+##Abordagem WEKA multlayers Perception
+
+<img src="weka-startup1.jpg" width="600px" />
+
+##Esquema da Rede Neural
+
+<img src="rede-neural.png" width="600px" />
+
+##Treinamento da Rede Neural
+
+<img src="treinamento.png" width="600px" />
+
+##Resultado da Rede Neural
+
+<img src="resultados.png" width="600px" />
+
+##Matrix de confusao
+
+<img src="matrix-confusao.png" width="600px" />
